@@ -32,12 +32,17 @@ object NotificationSenderActor {
 class NotificationSenderActor(notificationSenderFactory: NotificationSenderFactory) extends Actor {
 
   implicit private val executionContext: ExecutionContextExecutor = context.system.getDispatcher
+  private val logger = context.system.log
 
   override def receive: Receive = {
     case Notify(request) =>
+      logger.info(s"Received request [$request]")
       val response = Future(
         notificationSenderFactory.send(request)
-      ).map(response => Result(response))
+      ).map(response => {
+        logger.info(s"Response from provider [$response]")
+        Result(response)
+      })
       response.pipeTo(sender())
   }
 

@@ -1,17 +1,18 @@
+package integration
+
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestKit}
 import org.notification.NotificationSenderActor
-import org.notification.NotificationSenderActor.{NotificationSenderFactory, Notify, Result}
-import org.notification.dto.{NotifyRequest, NotifyResponse}
+import org.notification.NotificationSenderActor.{Notify, Result}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import sendgrid.{SendGridEmailRequest, SendGridEmailSender}
+import sendgrid.SendGridEmailRequest
 
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.FiniteDuration
 
-class SendGridEmailSenderISpec extends TestKit(ActorSystem("SendGridEmailSender"))
+class SystemSpec extends TestKit(ActorSystem("test_system"))
   with ImplicitSender
   with AnyWordSpecLike
   with BeforeAndAfterAll
@@ -23,14 +24,13 @@ class SendGridEmailSenderISpec extends TestKit(ActorSystem("SendGridEmailSender"
 
   "NotificationSenderActor" should {
     "send email through sendgrid" in {
-      val factory: NotificationSenderFactory = new NotificationSenderFactory {
-        override def send[T <: NotifyRequest](request: T): NotifyResponse = SendGridEmailSender.send(request.asInstanceOf[SendGridEmailRequest])
-      }
-      val actor = system.actorOf(NotificationSenderActor.props(factory))
+      val actor = system.actorOf(NotificationSenderActor.props(NotificationSenderFactoryImpl))
       actor ! Notify(SendGridEmailRequest(List.empty, List.empty, List.empty, "", "", ""))
       val result = expectMsgClass(FiniteDuration(10, TimeUnit.SECONDS), classOf[Result])
-      result.response.statusCode shouldBe 401
+      result.response.statusCode should not be >=(400)
     }
+    "send slack notification" in {}
+    "send device notification" in {}
   }
 
 }

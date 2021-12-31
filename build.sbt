@@ -16,11 +16,20 @@ lazy val core = project
     )
   )
 
+lazy val api = project
+  .in(file("api"))
+  .settings(
+    libraryDependencies ++= Seq(
+
+    )
+  )
+
 lazy val infra = project
   .in(file("infra"))
   .settings(
     libraryDependencies ++= Seq(
       "com.sendgrid" % "sendgrid-java" % SendGridVersion,
+      "ch.qos.logback" % "logback-classic" % "1.2.9",
       "org.scalatest" %% "scalatest" % ScalaTestVersion % Test,
       "com.typesafe.akka" %% "akka-testkit" % AkkaVersion % Test
     )

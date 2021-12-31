@@ -5,11 +5,3 @@ trait NotifyResponse {
   val message: String
   val timeStamp: String
 }
-
-/*
-case class SendEmailResponse(
-                              statusCode: Int,
-                              message: String,
-                              timeStamp: String
-                            ) extends NotifyResponse
- */
