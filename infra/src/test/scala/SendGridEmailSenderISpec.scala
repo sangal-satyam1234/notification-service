@@ -8,6 +8,9 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import sendgrid.{SendGridEmailRequest, SendGridEmailSender}
 
+import java.util.concurrent.TimeUnit
+import scala.concurrent.duration.FiniteDuration
+
 class SendGridEmailSenderISpec extends TestKit(ActorSystem("SendGridEmailSender"))
   with ImplicitSender
   with AnyWordSpecLike
@@ -25,8 +28,8 @@ class SendGridEmailSenderISpec extends TestKit(ActorSystem("SendGridEmailSender"
       }
       val actor = system.actorOf(NotificationSenderActor.props(factory))
       actor ! Notify(SendGridEmailRequest(List.empty, List.empty, List.empty, "", "", ""))
-      val result = expectMsgClass(classOf[Result])
-      result.response.statusCode shouldBe 400
+      val result = expectMsgClass(FiniteDuration(10, TimeUnit.SECONDS), classOf[Result])
+      result.response.statusCode shouldBe 401
     }
   }
 

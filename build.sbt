@@ -5,6 +5,8 @@ version := "0.1"
 scalaVersion := "2.13.7"
 
 val AkkaVersion = "2.6.18"
+val SendGridVersion = "4.8.1"
+val ScalaTestVersion = "3.2.10"
 
 lazy val core = project
   .in(file("core"))
@@ -18,7 +20,8 @@ lazy val infra = project
   .in(file("infra"))
   .settings(
     libraryDependencies ++= Seq(
-      "org.scalatest" %% "scalatest" % "3.2.10" % Test,
+      "com.sendgrid" % "sendgrid-java" % SendGridVersion,
+      "org.scalatest" %% "scalatest" % ScalaTestVersion % Test,
       "com.typesafe.akka" %% "akka-testkit" % AkkaVersion % Test
     )
   )

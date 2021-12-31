@@ -35,7 +35,9 @@ class NotificationSenderActor(notificationSenderFactory: NotificationSenderFacto
 
   override def receive: Receive = {
     case Notify(request) =>
-      val response = Future(Result(notificationSenderFactory.send(request)))
+      val response = Future(
+        notificationSenderFactory.send(request)
+      ).map(response => Result(response))
       response.pipeTo(sender())
   }
 
