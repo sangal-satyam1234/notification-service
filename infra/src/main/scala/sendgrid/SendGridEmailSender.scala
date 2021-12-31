@@ -17,17 +17,16 @@ case class SendGridEmailRequest(
                                  htmlTitle: String
                                ) extends NotifyRequest
 
+case class SendGridEmailResponse(statusCode: Int, message: String, timeStamp: String = System.currentTimeMillis().toString) extends NotifyResponse
+
 object SendGridEmailSender extends NotificationSender[SendGridEmailRequest] {
 
   override def send(request: SendGridEmailRequest): NotifyResponse = {
     val mail = constructMail(request)
     val sendGridResponse = Try(process(mail))
+    //TODO :: Error handling here
     sendGridResponse.map(constructResponse).getOrElse(
-      new NotifyResponse {
-        override val statusCode: Int = 500
-        override val message: String = "Something went wrong with sendgrid"
-        override val timeStamp: String = System.currentTimeMillis().toString
-      }
+      SendGridEmailResponse(500, message = "Something went wrong with sendgrid")
     )
   }
 
@@ -54,10 +53,7 @@ object SendGridEmailSender extends NotificationSender[SendGridEmailRequest] {
   }
 
   private def constructResponse(response: Response): NotifyResponse = {
-    new NotifyResponse {
-      override val statusCode: Int = response.getStatusCode
-      override val message: String = response.getBody
-      override val timeStamp: String = System.currentTimeMillis().toString
-    }
+    SendGridEmailResponse(response.getStatusCode, response.getBody)
   }
+
 }
