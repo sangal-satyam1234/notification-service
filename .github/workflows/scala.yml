@@ -18,7 +18,7 @@ jobs:
       with:
         java-version: '11'
         distribution: 'adopt'
-    - name: Build and Compile
+    - name: Clean and Compile
       run: sbt clean compile
     - name: Run tests
       run: sbt test

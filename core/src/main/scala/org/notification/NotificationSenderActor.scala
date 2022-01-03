@@ -1,49 +1,38 @@
 package org.notification
 
-import akka.actor.{Actor, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.pattern.pipe
-import org.notification.NotificationSenderActor.{NotificationSenderFactory, Notify, Result}
+import org.notification.NotificationSenderActor.{Notify, Result}
 import org.notification.dto.{NotifyRequest, NotifyResponse}
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 
 object NotificationSenderActor {
 
-  case class Notify[T <: NotifyRequest](request: T)
+  case class Notify[T <: NotifyRequest](request: T, replyTo: ActorRef)
 
-  case class Result(response: NotifyResponse)
+  case class Result(replyFrom:String,response: NotifyResponse)
 
-  trait NotificationSenderFactory {
-    def send[T <: NotifyRequest](request: T): NotifyResponse
-
-    //class NotificationSenderFactory {
-    //  def send[T: NotificationSender](request: T): NotifyResponse = {
-    //    implicitly[NotificationSender[T]].send(request)
-    //  }
-    //}
-  }
-
-  def props(factory: NotificationSenderFactory): Props = {
-    Props(new NotificationSenderActor(factory))
+  def props(id:String,factory: NotificationSenderFactory): Props = {
+    Props(new NotificationSenderActor(id,factory))
   }
 
 }
 
-class NotificationSenderActor(notificationSenderFactory: NotificationSenderFactory) extends Actor {
+class NotificationSenderActor(id:String,notificationSenderFactory: NotificationSenderFactory) extends Actor with ActorLogging {
 
   implicit private val executionContext: ExecutionContextExecutor = context.system.getDispatcher
-  private val logger = context.system.log
 
   override def receive: Receive = {
-    case Notify(request) =>
-      logger.info(s"Received request [$request]")
+    case Notify(request, replyTo) =>
+      log.info(s"Received request [$request] at [$id]")
       val response = Future(
         notificationSenderFactory.send(request)
       ).map(response => {
-        logger.info(s"Response from provider [$response]")
-        Result(response)
+        log.info(s"Response from provider [$response]")
+        Result(id,response)
       })
-      response.pipeTo(sender())
+      response.pipeTo(replyTo)
   }
 
 }
