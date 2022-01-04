@@ -9,7 +9,7 @@ object ClusterManager {
 
   case object GetMembers extends ClusterMessage
 
-  def props(nodeId: String) = Props(new ClusterManager(nodeId))
+  def props(nodeId: String): Props = Props(new ClusterManager(nodeId))
 }
 
 class ClusterManager(nodeId: String) extends Actor with ActorLogging {
@@ -20,7 +20,7 @@ class ClusterManager(nodeId: String) extends Actor with ActorLogging {
   override def receive: Receive = {
     case GetMembers =>
       sender() ! cluster.state.members.filter(_.status == MemberStatus.up)
-        .map(_.address.toString)
+        .map(_.toString())
         .toList
   }
 }

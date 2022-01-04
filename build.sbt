@@ -11,11 +11,6 @@ val ScalaTestVersion = "3.2.10"
 
 lazy val core = project
   .in(file("core"))
-  .settings(
-    libraryDependencies ++= Seq(
-      "com.typesafe.akka" %% "akka-actor-typed" % AkkaVersion
-    )
-  )
 
 lazy val infra = project
   .in(file("infra"))
@@ -23,7 +18,7 @@ lazy val infra = project
   .settings(
     libraryDependencies ++= Seq(
       "com.sendgrid" % "sendgrid-java" % SendGridVersion,
-      "ch.qos.logback" % "logback-classic" % "1.2.9",
+      "ch.qos.logback" % "logback-classic" % "1.2.10",
       "com.typesafe.akka" %% "akka-actor-typed" % AkkaVersion,
       "com.typesafe.akka" %% "akka-cluster-typed" % AkkaVersion,
       "com.typesafe.akka" %% "akka-stream" % AkkaVersion,
@@ -32,12 +27,13 @@ lazy val infra = project
       "org.scalatest" %% "scalatest" % ScalaTestVersion % Test,
       "com.typesafe.akka" %% "akka-testkit" % AkkaVersion % Test
     ),
-    mainClass in Compile := Some("akka.Main"),
+    Compile / mainClass := Some("akka.Main"),
     dockerBaseImage := "java:8-jre-alpine",
-    version in Docker := "latest",
+    Docker / version := "latest",
     dockerExposedPorts := Seq(8000),
     dockerRepository := Some("satyam")
   )
   .dependsOn(core)
 
+ThisBuild / resolvers += Resolver.mavenCentral
 publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true)

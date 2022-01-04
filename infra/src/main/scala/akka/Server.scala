@@ -21,15 +21,13 @@ object Server {
 
   case object Stop extends Message
 
-  def props(host: String, port: Int): Props = Props(new Server(host, port))
+  def props(host: String, port: Int, route: Route): Props = Props(new Server(host, port, route))
 }
 
-class Server(host: String, port: Int) extends Actor with ActorLogging {
+class Server(host: String, port: Int, route: Route) extends Actor with ActorLogging {
 
   implicit val system: ActorSystem = context.system
   implicit val dispatcher: ExecutionContextExecutor = context.system.getDispatcher
-
-  val route: Route = ServerRoute.getRoute
 
   def serverBinding: Future[Http.ServerBinding] = Http().newServerAt(host, port).bind(route)
 

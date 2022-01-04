@@ -1,25 +1,34 @@
 package sendgrid
 
+import akka.RootManager.PropertyContext
 import com.sendgrid.helpers.mail.Mail
 import com.sendgrid.helpers.mail.objects.{Content, Email, Personalization}
 import com.sendgrid.{Method, Request, Response, SendGrid}
 import org.notification.dto.{NotifyRequest, NotifyResponse}
 import org.notification.sender.NotificationSender
+import sendgrid.SendGridEmailSender.{SendGridEmailRequest, SendGridEmailResponse}
 
+import java.time.LocalDateTime
 import scala.util.Try
 
-case class SendGridEmailRequest(
-                                 recipients: List[String],
-                                 cc: List[String],
-                                 bcc: List[String],
-                                 sender: String,
-                                 htmlBody: String,
-                                 htmlTitle: String
-                               ) extends NotifyRequest
+object SendGridEmailSender {
 
-case class SendGridEmailResponse(statusCode: Int, message: String, timeStamp: String = System.currentTimeMillis().toString) extends NotifyResponse
+  case class SendGridEmailRequest(
+                                   recipients: List[String],
+                                   cc: List[String],
+                                   bcc: List[String],
+                                   sender: String,
+                                   htmlBody: String,
+                                   htmlTitle: String
+                                 ) extends NotifyRequest
 
-object SendGridEmailSender extends NotificationSender[SendGridEmailRequest] {
+  case class SendGridEmailResponse(statusCode: Int, message: String, timeStamp: String = LocalDateTime.now().toString) extends NotifyResponse
+
+  def withContext(context: PropertyContext): SendGridEmailSender = new SendGridEmailSender(context)
+
+}
+
+class SendGridEmailSender(private val context: PropertyContext) extends NotificationSender[SendGridEmailRequest] {
 
   override def send(request: SendGridEmailRequest): NotifyResponse = {
     val mail = constructMail(request)
@@ -30,8 +39,10 @@ object SendGridEmailSender extends NotificationSender[SendGridEmailRequest] {
     )
   }
 
+  def getContext: PropertyContext = this.context
+
   private def process(mail: Mail): Response = {
-    val sg = new SendGrid(System.getenv("SENDGRID_API_KEY"))
+    val sg = new SendGrid(getContext.getProperty("SENDGRID_API_KEY").toString)
     val request = new Request
     request.setMethod(Method.POST)
     request.setEndpoint("mail/send")
