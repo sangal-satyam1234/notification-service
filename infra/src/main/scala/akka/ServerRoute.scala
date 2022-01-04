@@ -1,7 +1,7 @@
 package akka
 
 import akka.NotificationManager.Result
-import akka.RootManager.{GetClusterMembers, Notify}
+import akka.RootManager.{GetClusterMembers, Notify, PropertyContext}
 import akka.actor.ActorRef
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.model.{HttpHeader, StatusCodes}
@@ -67,7 +67,9 @@ class ServerRoute(rootManager: ActorRef) extends JsonSupport {
           headerValue(extractApiKey) { api_key =>
             entity(as[SendGridEmailRequest]) {
               case sendgridGridRequest: SendGridEmailRequest =>
-                onSuccess(rootManager ? Notify(_ => api_key, sendgridGridRequest)) {
+                onSuccess(rootManager ? Notify(new PropertyContext {
+                  override def getProperty(key: String): Any = api_key
+                }, sendgridGridRequest)) {
                   case result: Result => complete(
                     StatusCodes.custom(
                       result.response.statusCode,

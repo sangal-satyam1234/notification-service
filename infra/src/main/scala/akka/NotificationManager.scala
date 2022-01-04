@@ -12,9 +12,9 @@ import scala.concurrent.{ExecutionContextExecutor, Future}
 
 object NotificationManager {
 
-  case class Notify[T <: NotifyRequest](context: PropertyContext, request: T)
+  case class Notify[T <: NotifyRequest](context: PropertyContext, request: T) extends KryoSerializable
 
-  case class Result(replyFrom: String, response: NotifyResponse)
+  case class Result(replyFrom: String, response: NotifyResponse) extends KryoSerializable
 
   def props(id: String, factoryBuilder: PropertyContext => NotificationSenderFactory): Props = Props(new NotificationManager(id, factoryBuilder))
 
