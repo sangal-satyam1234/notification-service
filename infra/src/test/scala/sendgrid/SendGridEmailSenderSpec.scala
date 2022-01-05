@@ -10,7 +10,7 @@ class SendGridEmailSenderSpec extends AnyFlatSpecLike with Matchers {
     val request = SendGridEmailRequest(List(""), List(), List(), "", "testBody", "testSubject")
     val response = SendGridEmailSender
       .withContext(
-        (_: String) => "insert key"
+        (_: String) => Some("insert key")
       ).send(request)
     println(response.message)
     response.statusCode shouldBe 200

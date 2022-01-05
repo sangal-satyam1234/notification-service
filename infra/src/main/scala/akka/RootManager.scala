@@ -16,12 +16,12 @@ object RootManager {
 
   object PropertyContext {
     def fromMap(map: Map[String, Any]): PropertyContext = new PropertyContext {
-      override def getProperty(key: String): Any = map.get(key)
+      override def getProperty(key: String): Option[Any] = map.get(key)
     }
   }
 
   trait PropertyContext {
-    def getProperty(key: String): Any
+    def getProperty(key: String): Option[Any]
   }
 
   def props(nodeId: String, factoryBuilder: Function[PropertyContext, NotificationSenderFactory]): Props = Props(new RootManager(nodeId, factoryBuilder))

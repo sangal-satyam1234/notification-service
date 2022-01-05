@@ -58,7 +58,8 @@ class SendGridEmailSender(private val context: PropertyContext) extends Notifica
   def getContext: PropertyContext = this.context
 
   private def process(mail: Mail): Response = {
-    val sg = new SendGrid(getContext.getProperty("SENDGRID_API_KEY").toString)
+    val api_key = getContext.getProperty("SENDGRID_API_KEY").getOrElse(throw new Exception("SENDGRID_API_KEY is not set"))
+    val sg = new SendGrid(api_key.toString)
     val request = new Request
     request.setMethod(Method.POST)
     request.setEndpoint("mail/send")
