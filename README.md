@@ -34,6 +34,9 @@ using akka-clustering and akka-http so that users can easily wire their own noti
 
       d) Wire your provider in implementation using builder (Main.scala#FactoryBuilder).
 
+References:
+1) https://www.freecodecamp.org/news/how-to-make-a-simple-application-with-akka-cluster-506e20a725cf/
+2) https://github.com/mel3kings/scalable-email-service
 
 Features to add
 1) blacklist/whitelist recipients/senders
