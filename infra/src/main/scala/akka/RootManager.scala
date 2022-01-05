@@ -14,6 +14,12 @@ object RootManager {
 
   case object GetClusterMembers
 
+  object PropertyContext {
+    def fromMap(map: Map[String, Any]): PropertyContext = new PropertyContext {
+      override def getProperty(key: String): Any = map.get(key)
+    }
+  }
+
   trait PropertyContext {
     def getProperty(key: String): Any
   }

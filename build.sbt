@@ -29,7 +29,7 @@ lazy val infra = project
       "com.typesafe.akka" %% "akka-testkit" % AkkaVersion % Test
     ),
     Compile / mainClass := Some("akka.Main"),
-    dockerBaseImage := "java:8-jre-alpine",
+    dockerBaseImage := "openjdk:11-jre-slim-buster",
     Docker / version := "latest",
     dockerExposedPorts := Seq(8000),
     dockerRepository := Some("satyam")

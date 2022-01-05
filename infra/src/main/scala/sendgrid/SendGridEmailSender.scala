@@ -6,10 +6,11 @@ import com.sendgrid.helpers.mail.objects.{Content, Email, Personalization}
 import com.sendgrid.{Method, Request, Response, SendGrid}
 import org.notification.dto.{NotifyRequest, NotifyResponse}
 import org.notification.sender.NotificationSender
+import org.slf4j.LoggerFactory
 import sendgrid.SendGridEmailSender.{SendGridEmailRequest, SendGridEmailResponse}
 
 import java.time.LocalDateTime
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 object SendGridEmailSender {
 
@@ -20,23 +21,38 @@ object SendGridEmailSender {
                                    sender: String,
                                    htmlBody: String,
                                    htmlTitle: String
-                                 ) extends NotifyRequest
+                                 ) extends NotifyRequest {
+    require(recipients.nonEmpty && validEmails(recipients), "Recipients contains an invalid email")
+    require(validEmails(cc), "cc contains an invalid email")
+    require(validEmails(bcc), "bcc contains an invalid email")
+    require(!sender.isBlank && validEmail(sender), "sender contains an invalid email")
+    require(!htmlBody.isBlank && htmlBody.nonEmpty, "htmlBody contains an invalid body")
+    require(!htmlTitle.isBlank && htmlTitle.nonEmpty, "htmlTitle contains an invalid title")
+  }
 
   case class SendGridEmailResponse(statusCode: Int, message: String, timeStamp: String = LocalDateTime.now().toString) extends NotifyResponse
 
   def withContext(context: PropertyContext): SendGridEmailSender = new SendGridEmailSender(context)
 
+  def validEmail(email: String): Boolean = email.matches("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+.[a-zA-Z]{2,4}")
+
+  def validEmails(emails: List[String]): Boolean = emails.forall(validEmail)
+
 }
 
 class SendGridEmailSender(private val context: PropertyContext) extends NotificationSender[SendGridEmailRequest] {
 
+  private val logger = LoggerFactory.getLogger(this.getClass)
+
   override def send(request: SendGridEmailRequest): NotifyResponse = {
     val mail = constructMail(request)
     val sendGridResponse = Try(process(mail))
-    //TODO :: Error handling here
-    sendGridResponse.map(constructResponse).getOrElse(
-      SendGridEmailResponse(500, message = "Something went wrong with sendgrid")
-    )
+    sendGridResponse.map(constructResponse) match {
+      case Success(value) => value
+      case Failure(exception) =>
+        logger.error("Error while using sendgrid", exception)
+        SendGridEmailResponse(500, message = "Something went wrong with sendgrid")
+    }
   }
 
   def getContext: PropertyContext = this.context

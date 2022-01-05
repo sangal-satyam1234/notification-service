@@ -33,7 +33,6 @@ class ServerRoute(rootManager: ActorRef) extends JsonSupport {
     case _ => None
   }
 
-  //TODO :: Route for getting members + sending notifications ++ testing of routes
   def getRoute: Route = concat(
     pathPrefix("health")(healthRoute),
     pathPrefix("notify")(notificationRoute)
@@ -67,9 +66,7 @@ class ServerRoute(rootManager: ActorRef) extends JsonSupport {
           headerValue(extractApiKey) { api_key =>
             entity(as[SendGridEmailRequest]) {
               case sendgridGridRequest: SendGridEmailRequest =>
-                onSuccess(rootManager ? Notify(new PropertyContext {
-                  override def getProperty(key: String): Any = api_key
-                }, sendgridGridRequest)) {
+                onSuccess(rootManager ? Notify(PropertyContext.fromMap(Map("SENDGRID_API_KEY" -> api_key)), sendgridGridRequest)) {
                   case result: Result => complete(
                     StatusCodes.custom(
                       result.response.statusCode,
