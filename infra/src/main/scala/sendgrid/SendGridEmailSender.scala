@@ -51,15 +51,18 @@ class SendGridEmailSender(private val context: PropertyContext) extends Notifica
       case Success(value) => value
       case Failure(exception) =>
         logger.error("Error while using sendgrid", exception)
-        SendGridEmailResponse(500, message = "Something went wrong with sendgrid")
+        SendGridEmailResponse(500, message = s"Error : [${exception.getMessage}]")
     }
   }
 
   def getContext: PropertyContext = this.context
 
   private def process(mail: Mail): Response = {
-    val api_key = getContext.getProperty("SENDGRID_API_KEY").getOrElse(throw new Exception("SENDGRID_API_KEY is not set"))
-    val sg = new SendGrid(api_key.toString)
+    val api_key = getContext.getProperty("SENDGRID_API_KEY") match {
+      case Some(value) if !value.toString.isBlank => value.toString
+      case _ => throw new Exception("SENDGRID_API_KEY is not set")
+    }
+    val sg = new SendGrid(api_key)
     val request = new Request
     request.setMethod(Method.POST)
     request.setEndpoint("mail/send")
