@@ -1,5 +1,4 @@
-This repo provides a simple notification reactive infrastructure 
-using akka-clustering and akka-http so that users can easily wire their own notification providers and functionality.
+This repo provides a simple notification reactive infrastructure which can serve as single integration point for different notification providers. The client need not to be worried about scaling or fault tolerance and it should be easy to integrate additional service providers.
 
 
 # **Building**
@@ -34,12 +33,14 @@ using akka-clustering and akka-http so that users can easily wire their own noti
 
       d) Wire your provider in implementation using builder (Main.scala#FactoryBuilder).
 
+2) Https is supported. Enable it in application.conf file.
+
 References:
 1) https://www.freecodecamp.org/news/how-to-make-a-simple-application-with-akka-cluster-506e20a725cf/
 2) https://github.com/mel3kings/scalable-email-service
+3) https://lightbend.github.io/ssl-config/CertificateGeneration.html
 
 Features to add
 1) blacklist/whitelist recipients/senders
 2) logging events to stream
-3) security to prevent misuse of service - done partially
-4) automated end 2 end tests
+3) automated end 2 end tests
