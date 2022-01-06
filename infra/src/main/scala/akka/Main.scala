@@ -16,10 +16,9 @@ import scala.concurrent.{Await, Future}
 
 object Main extends App {
 
-  val config: Config = ConfigFactory.load()
-  val host = config.getString("http.ip")
-  val port = config.getInt("http.port")
+  val config: Config = loadConfig()
   val nodeId = config.getString("clustering.ip")
+  val serverConfig = config.getConfig("server")
 
   val factoryBuilder = (ctx: PropertyContext) => {
     new NotificationSenderFactory {
@@ -36,7 +35,7 @@ object Main extends App {
   val system: ActorSystem = ActorSystem("notification-cluster")
   val node: ActorRef = system.actorOf(RootManager.props(nodeId, factoryBuilder), "rootManager")
   val route: Route = new ServerRoute(node).getRoute
-  val server: ActorRef = system.actorOf(Server.props(host, port, route), "server")
+  val server: ActorRef = system.actorOf(Server.props(serverConfig, route), "server")
 
   server ! Start
 
@@ -53,5 +52,10 @@ object Main extends App {
       ()
     })
   )
+
+  def loadConfig():Config = {
+    //todo:: provide more options to load configuration
+    ConfigFactory.load()
+  }
 
 }

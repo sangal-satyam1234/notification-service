@@ -2,12 +2,16 @@ package akka
 
 import akka.Server.{Start, StartFailed, Started, Stop}
 import akka.actor.{Actor, ActorLogging, ActorSystem, Props}
-import akka.http.scaladsl.Http
 import akka.http.scaladsl.Http.ServerBinding
 import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.{ConnectionContext, Http, HttpsConnectionContext}
+import akka.pattern.pipe
+import com.typesafe.config.Config
 
+import java.io.{BufferedInputStream, File, FileInputStream}
+import java.security.{KeyStore, SecureRandom}
+import javax.net.ssl.{KeyManagerFactory, SSLContext, TrustManagerFactory}
 import scala.concurrent.{ExecutionContextExecutor, Future}
-import scala.util.{Failure, Success}
 
 object Server {
 
@@ -21,28 +25,40 @@ object Server {
 
   case object Stop extends Message
 
-  def props(host: String, port: Int, route: Route): Props = Props(new Server(host, port, route))
+  def props(config: Config, route: Route): Props = Props(new Server(config, route))
 }
 
-class Server(host: String, port: Int, route: Route) extends Actor with ActorLogging {
+class Server(serverConfig: Config, route: Route) extends Actor with ActorLogging {
 
   implicit val system: ActorSystem = context.system
   implicit val dispatcher: ExecutionContextExecutor = context.system.getDispatcher
 
-  def serverBinding: Future[Http.ServerBinding] = Http().newServerAt(host, port).bind(route)
+  def serverBinding: Future[Http.ServerBinding] = {
+    val host = serverConfig.getString("ip")
+    val port = serverConfig.getInt("port")
+    val sslEnabled = serverConfig.getBoolean("ssl.enabled")
+    if (sslEnabled) {
+      val password = serverConfig.getString("ssl.keystore.password").toCharArray
+      val keystoreType = serverConfig.getString("ssl.keystore.type")
+      val keystorePath = serverConfig.getString("ssl.keystore.path")
+      val manager = serverConfig.getString("ssl.keystore.manager")
+      val https = httpsConnectionContext(keystoreType, keystorePath, manager, password)
+      Http().newServerAt(host, port).enableHttps(https).bind(route)
+    }
+    else Http().newServerAt(host, port).bind(route)
+  }
 
   override def receive: Receive = {
     case Start =>
       context.become(starting(wasStopped = false))
-      serverBinding.onComplete {
-        case Success(binding) => self ! Started(binding)
-        case Failure(exception) => self ! StartFailed(exception)
-      }
-    case _ => log.warning("Server is offline")
+      serverBinding.map({
+        case binding => Started(binding)
+        case _ => StartFailed(_)
+      }).pipeTo(self)
   }
 
   def starting(wasStopped: Boolean): Receive = {
-    case StartFailed(cause) => throw new RuntimeException("Server failed to start", cause)
+    case StartFailed(cause) => throw new Exception("Server failed to start", cause)
     case Started(binding) =>
       log.info("Server online at http://{}:{}/",
         binding.localAddress.getHostString,
@@ -63,6 +79,20 @@ class Server(host: String, port: Int, route: Route) extends Actor with ActorLogg
     case Start => log.info("Server is already online at http://{}:{}/",
       binding.localAddress.getHostString,
       binding.localAddress.getPort)
+  }
+
+  private def httpsConnectionContext(keystoreType: String, keystorePath: String, manager: String, password: Array[Char]): HttpsConnectionContext = {
+    val ks: KeyStore = KeyStore.getInstance(keystoreType)
+    val keystore = new BufferedInputStream(new FileInputStream(new File(keystorePath)))
+    require(keystore != null, "Keystore required!")
+    ks.load(keystore, password)
+    val keyManagerFactory: KeyManagerFactory = KeyManagerFactory.getInstance(manager)
+    keyManagerFactory.init(ks, password)
+    val tmf: TrustManagerFactory = TrustManagerFactory.getInstance(manager)
+    tmf.init(ks)
+    val sslContext: SSLContext = SSLContext.getInstance("TLS")
+    sslContext.init(keyManagerFactory.getKeyManagers, tmf.getTrustManagers, new SecureRandom)
+    ConnectionContext.httpsServer(sslContext)
   }
 
 }
