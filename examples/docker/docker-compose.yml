@@ -1,0 +1,43 @@
+version: '3.8'
+
+networks:
+  cluster-network:
+    driver: bridge
+
+services:
+
+  seed:
+    networks:
+      - cluster-network
+    image: localrepo/examples
+    ports:
+      - '1600:1600'
+      - '8000:8000'
+    environment:
+      CLUSTER_PORT: 1600
+      CLUSTER_IP: seed
+      SEED_PORT_1600_TCP_ADDR: seed
+
+  node1:
+    networks:
+      - cluster-network
+    image: localrepo/examples
+    ports:
+      - '1601:1601'
+      - '8001:8000'
+    environment:
+      CLUSTER_PORT: 1601
+      CLUSTER_IP: node1
+      SEED_PORT_1600_TCP_ADDR: seed
+
+  node2:
+    networks:
+      - cluster-network
+    image: localrepo/examples
+    ports:
+      - '1602:1602'
+      - '8002:8000'
+    environment:
+      CLUSTER_PORT: 1602
+      CLUSTER_IP: node2
+      SEED_PORT_1600_TCP_ADDR: seed
