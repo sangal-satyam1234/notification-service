@@ -5,10 +5,11 @@ networks:
     driver: bridge
 
 services:
+
   seed:
     networks:
       - cluster-network
-    image: satyam/infra
+    image: localrepo/examples
     ports:
       - '1600:1600'
       - '8000:8000'
@@ -20,7 +21,7 @@ services:
   node1:
     networks:
       - cluster-network
-    image: satyam/infra
+    image: localrepo/examples
     ports:
       - '1601:1601'
       - '8001:8000'
@@ -32,7 +33,7 @@ services:
   node2:
     networks:
       - cluster-network
-    image: satyam/infra
+    image: localrepo/examples
     ports:
       - '1602:1602'
       - '8002:8000'

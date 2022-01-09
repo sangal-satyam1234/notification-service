@@ -58,7 +58,7 @@ class SendGridEmailSender(private val context: PropertyContext) extends Notifica
   def getContext: PropertyContext = this.context
 
   private def process(mail: Mail): Response = {
-    val api_key = getContext.getProperty("SENDGRID_API_KEY") match {
+    val api_key = this.getContext.getProperty("SENDGRID_API_KEY") match {
       case Some(value) if !value.toString.isBlank => value.toString
       case _ => throw new Exception("SENDGRID_API_KEY is not set")
     }

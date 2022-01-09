@@ -52,7 +52,7 @@ class Server(serverConfig: Config, route: Route) extends Actor with ActorLogging
     case Start =>
       context.become(starting(wasStopped = false))
       serverBinding.map({
-        case binding => Started(binding)
+        case binding:ServerBinding => Started(binding)
         case _ => StartFailed(_)
       }).pipeTo(self)
   }
